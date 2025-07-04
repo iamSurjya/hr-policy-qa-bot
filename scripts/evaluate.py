@@ -5,7 +5,7 @@ from rouge_score import rouge_scorer
 from tqdm import tqdm
 import os
 
-folder_path=r'/Users/destiny_mac/Documents/Suraj/projects/policy-qa-llm'
+folder_path=r'/Users/rutujadoble/Documents/Suraj/policy-qa-llm'
 
 # Load fine tuned model
 model_path=folder_path+'/models/lora_checkpoints'

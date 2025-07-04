@@ -4,7 +4,7 @@ from langchain_core.prompts import PromptTemplate
 from transformers import pipeline
 import os
 
-folder_path=r'/Users/destiny_mac/Documents/Suraj/projects/policy-qa-llm'
+folder_path=r'/Users/rutujadoble/Documents/Suraj/policy-qa-llm'
 model_name="all-MiniLM-L6-v2"
 
 # load FAISS Vector DB
@@ -16,13 +16,14 @@ def load_vector_store(index_path=folder_path+'/models/hr_faiss_index'):
 # Get relevent context from FAISS
 def retrive_context(query,vectorstore,k=3):
     docs=vectorstore.similarity_search(query=query,k=k)
-    context="\n\n".join([doc.page_content for doc in docs])
+    context="\n\n".join([doc.page_content for doc in docs if len(doc.page_content.strip())>20]) # if to filter irrelevent chunks
     return context
 
 # Generate Prompt for LLM
 def construct_prompt(user_query,context):
     propmt=f""" You are an HR policy assistant. Answer the user's question based only on the context below.
-If the answer is not found in the context, say "I could not find that in the current policy document."
+If the answer is not found in the context, say "I could not find that in the current policy document." 
+and do not make up an answer.
 
 Context: 
 {context}
@@ -52,7 +53,8 @@ def query_llm(prompt):
         model=model_path,
         tokenizer=model_path,
         max_new_tokens=300,
-        do_sample=False,
+        do_sample=False, # no randomness
+        temperature=0.0
         )
     output=(llm(prompt)[0]["generated_text"])
     return output

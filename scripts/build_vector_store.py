@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 import os
 
-folder_path=r'/Users/destiny_mac/Documents/Suraj/projects/policy-qa-llm'
+folder_path=r'/Users/rutujadoble/Documents/Suraj/policy-qa-llm'
 model_name="all-MiniLM-L6-v2"
 
 # Load the documents

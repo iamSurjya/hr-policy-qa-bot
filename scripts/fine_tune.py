@@ -6,7 +6,7 @@ from peft import LoraConfig,get_peft_model,prepare_model_for_kbit_training
 import torch
 
 # configurations
-folder_path=r'/Users/destiny_mac/Documents/Suraj/projects/policy-qa-llm'
+folder_path=r'/Users/rutujadoble/Documents/Suraj/policy-qa-llm'
 MODEL_NAME = "google/flan-t5-base" 
 OUTPUT_DIR = folder_path+ "/models/lora_checkpoints/"
 QA_PATH = folder_path + "/data/qa_pairs.json"
@@ -78,12 +78,12 @@ def main():
     training_args=TrainingArguments(
         output_dir=OUTPUT_DIR,
         num_train_epochs=3,
-        per_device_train_batch_size=4,
+        per_device_train_batch_size=2,
         logging_dir=folder_path +"/logs",
         logging_steps=10,
         save_strategy="epoch",
         evaluation_strategy="no",
-        fp16=True,
+        fp16=False,
         report_to=None
     )
 

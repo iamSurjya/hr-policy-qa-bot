@@ -1,1 +1,3 @@
-This is a read me file.
+Steps
+1. conda env create -f environment.yml
+2. conda activate GenAI

@@ -1,0 +1,19 @@
+name: GenAI
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9.23
+  - langchain=0.3.26
+  - langchain-community=0.3.27
+  - faiss-cpu
+  - datasets=2.18.0
+  - peft
+  - tokenizers
+  - transformers==4.49.0
+  - sentence-transformers=5.0.0
+  - nltk=3.9.1
+  - rouge-score=0.1.2
+  - pip
+  - pip:
+    - gradio

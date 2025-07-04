@@ -1,6 +1,6 @@
 import sys
 
-new_path = "/Users/destiny_mac/Documents/Suraj/projects/policy-qa-llm/"
+new_path = "/Users/rutujadoble/Documents/Suraj/policy-qa-llm"
 sys.path.append(new_path)
 
 import gradio  as gr
