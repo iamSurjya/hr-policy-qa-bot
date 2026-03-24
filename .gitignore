@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Vector store and models (binary, large)
+data/vector_store/
+models/
+
+# OS
+.DS_Store

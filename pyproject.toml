@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "hr-bot"
+version = "0.1.0"
+description = "Production HR policy Q&A bot using RAG + Gemini/Claude"
+authors = ["Suraj Choudhary"]
+packages = [{include = "hr_bot", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+pydantic = "^2.10.0"
+pydantic-settings = "^2.7.0"
+anthropic = "^0.40.0"
+langchain-community = "^0.3.0"
+langchain-huggingface = "^0.1.0"
+sentence-transformers = "^3.0.0"
+chromadb = "^0.6.0"
+python-dotenv = "^1.0.0"
+structlog = "^24.0.0"
+google-genai = "^1.68.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+httpx = "^0.28.0"
+ruff = "^0.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry-core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

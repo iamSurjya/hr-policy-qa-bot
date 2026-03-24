@@ -1,0 +1,7 @@
+{
+  "venvPath": "/Users/surajchoudhary/Library/Caches/pypoetry/virtualenvs",
+  "venv": "hr-bot-OGI5iPGC-py3.11",
+  "pythonVersion": "3.11",
+  "include": ["src"],
+  "extraPaths": ["src"]
+}
