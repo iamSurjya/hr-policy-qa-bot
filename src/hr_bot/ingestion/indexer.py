@@ -1,16 +1,17 @@
 import chromadb
-from chromadb.utils import embedding_functions
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction # type: ignore
 import structlog
 
 from hr_bot.config import settings
 from hr_bot.ingestion.chunker import Chunk
+from chromadb.api import ClientAPI
 
 log = structlog.get_logger()
 
 COLLECTION_NAME = "hr_policies"
 
 
-def get_chroma_client() -> chromadb.PersistentClient:
+def get_chroma_client() -> ClientAPI:
     """Returns a ChromaDB client that persists to disk.
 
     PersistentClient writes to CHROMA_PATH in .env.
@@ -21,7 +22,7 @@ def get_chroma_client() -> chromadb.PersistentClient:
 
 
 def get_or_create_collection(
-    client: chromadb.PersistentClient,
+    client: ClientAPI,
 ) -> chromadb.Collection:
     """Get existing collection or create a new one.
 
@@ -31,7 +32,7 @@ def get_or_create_collection(
     This is critical: mismatched embedding models produce
     meaningless similarity scores.
     """
-    embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+    embedding_fn = SentenceTransformerEmbeddingFunction(
         model_name=settings.embedding_model
     )
     return client.get_or_create_collection(
