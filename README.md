@@ -249,3 +249,68 @@ poetry run pytest tests/unit/test_chunker.py -v
 ---
 
 *This README is updated at each stage of the build. Last updated: ingestion layer in progress.*
+---
+
+## Build Progress
+
+### Completed Layers
+
+#### Generation Layer
+- `src/hr_bot/generation/providers.py` — LLM provider abstraction (Gemini + Claude)
+- `src/hr_bot/generation/prompt.py` — System prompt + PromptBuilder
+
+Key decisions:
+- Abstract base class `LLMProvider` enforces `generate()` contract on all providers
+- Factory function `get_llm_provider()` reads `LLM_PROVIDER` from config — one variable switches providers
+- `isinstance(block, TextBlock)` used for Anthropic SDK type narrowing
+- Gemini response accessed via `candidates[0].content.parts[0].text` — defensive access pattern
+
+#### Ingestion Layer
+- `src/hr_bot/ingestion/loader.py` — Loads .md files with metadata (source, title)
+- `src/hr_bot/ingestion/chunker.py` — Splits documents into 2048-char chunks with 200-char overlap
+- `src/hr_bot/ingestion/indexer.py` — Embeds chunks and stores in ChromaDB
+
+Key decisions:
+- `Document` dataclass carries metadata through the entire pipeline — never lose source attribution
+- `RecursiveCharacterTextSplitter` splits on paragraphs first, then sentences, then words — never splits mid-thought arbitrarily
+- `chunk_size=2048` chars (~512 tokens) — up from old 300 chars which was too small
+- ChromaDB `PersistentClient` — survives process restarts, no pickle security issue
+- `reset=True` flag on `build_index()` — clean rebuild when policies change
+- `# type: ignore` used on ChromaDB imports — library has broken type stubs, code is correct
+
+To rebuild the index after policy changes:
+```bash
+python -c "
+from hr_bot.ingestion.loader import load_documents
+from hr_bot.ingestion.chunker import chunk_documents
+from hr_bot.ingestion.indexer import build_index
+docs = load_documents('./data/policy_docs')
+chunks = chunk_documents(docs)
+build_index(chunks, reset=True)
+"
+```
+
+#### Retrieval Layer
+- `src/hr_bot/retrieval/searcher.py` — Embeds query, searches ChromaDB, returns ranked results
+
+Key decisions:
+- Same embedding model at index time and query time — mismatched models produce meaningless scores
+- Returns `SearchResult` dataclass with similarity score (1 - cosine distance)
+- Defensive unpacking of ChromaDB results — guards against None fields
+- Retrieves k=5 chunks — more than needed so pipeline can filter low-quality results
+
+Sample retrieval output for "How many sick days do I get?":
+- Top result: `benefits-and-perks.md` similarity 0.2973
+- Scores are low due to semantic gap between "sick days" and "PTO" — reranker will fix this in phase 2
+
+### In Progress
+- `src/hr_bot/pipeline.py` — RAG orchestrator
+- `src/hr_bot/api/` — FastAPI endpoints
+
+### Remaining
+- `src/hr_bot/api/schemas.py` — Pydantic request/response models
+- `src/hr_bot/api/routes.py` — POST /query, GET /health
+- `src/hr_bot/api/main.py` — FastAPI app factory
+- `scripts/ingest.py` — CLI ingestion script
+- `tests/unit/` — Unit tests
+- `Dockerfile` — Container definition
