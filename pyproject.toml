@@ -19,6 +19,7 @@ chromadb = "^0.6.0"
 python-dotenv = "^1.0.0"
 structlog = "^24.0.0"
 google-genai = "^1.68.0"
+groq = "^1.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

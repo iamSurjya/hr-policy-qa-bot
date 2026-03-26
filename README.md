@@ -314,3 +314,33 @@ Sample retrieval output for "How many sick days do I get?":
 - `scripts/ingest.py` — CLI ingestion script
 - `tests/unit/` — Unit tests
 - `Dockerfile` — Container definition
+
+---
+
+### LLM Provider Updates
+
+#### Why we switched from Gemini to Groq for development
+During setup, the new Google Cloud project had `limit: 0` on all Gemini models — free tier requires billing enabled even for new projects. Rather than add a credit card for dev work, we added Groq as a third provider.
+
+Gemini code is fully preserved — `GeminiProvider` still exists and works once the Google project has billing enabled. Switching back is one line in `.env`.
+
+#### Adding Groq provider
+1. `poetry add groq` — adds the Groq SDK
+2. Added `GroqProvider` class to `providers.py` — same interface as Gemini and Claude
+3. Added `groq_api_key` and `groq_model` to `config.py`
+4. Updated factory in `get_llm_provider()` to include `"groq": GroqProvider`
+5. Updated `.env` with `LLM_PROVIDER=groq` and `GROQ_API_KEY`
+
+#### Current provider config
+| Provider | When to use | Model |
+|---|---|---|
+| Groq | Development (free, fast) | llama-3.3-70b-versatile |
+| Gemini | Development alternative | gemini-2.0-flash (needs billing) |
+| Claude | Production | claude-sonnet-4-6 |
+
+To switch providers — one line in `.env`:
+```
+LLM_PROVIDER=groq    # development
+LLM_PROVIDER=gemini  # if Google billing enabled
+LLM_PROVIDER=claude  # production
+```

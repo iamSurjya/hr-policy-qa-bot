@@ -13,11 +13,15 @@ class Settings(BaseSettings):
 
     # Gemini
     gemini_api_key: str = Field(default="")
-    gemini_model: str = Field(default="gemini-2.0-flash-exp")
+    gemini_model: str = Field(default="gemini-2.0-flash-lite")
 
     # Anthropic
     anthropic_api_key: str = Field(default="")
     claude_model: str = Field(default="claude-sonnet-4-6")
+
+    # Groq
+    groq_api_key: str = Field(default="")
+    groq_model: str = Field(default="llama-3.3-70b-versatile")
 
     # Paths
     chroma_path: str = Field(default="./data/vector_store")

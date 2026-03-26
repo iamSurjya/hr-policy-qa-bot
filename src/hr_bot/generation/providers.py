@@ -22,7 +22,6 @@ class LLMProvider(ABC):
         """Generate a response given a prompt and optional system message."""
         ...
 
-
 class GeminiProvider(LLMProvider):
     """Google Gemini provider — used in development (free tier)."""
 
@@ -43,7 +42,6 @@ class GeminiProvider(LLMProvider):
             contents=full_prompt,
         )
         return response.text or ""
-
 
 class ClaudeProvider(LLMProvider):
     """Anthropic Claude provider — used in production."""
@@ -70,6 +68,35 @@ class ClaudeProvider(LLMProvider):
             return block.text or ""
         return ""
 
+class GroqProvider(LLMProvider):
+    """Groq provider — free tier, used for development.
+    
+    Runs Llama 3.3 70B on Groq's custom inference hardware.
+    Fast, free, and OpenAI-compatible API.
+    """
+
+    def __init__(self):
+        if not settings.groq_api_key:
+            raise ValueError(
+                "GROQ_API_KEY is not set. "
+                "Add it to your .env file."
+            )
+        from groq import Groq
+        self.client = Groq(api_key=settings.groq_api_key)
+        self.model = settings.groq_model
+        log.info("llm_provider_initialized", provider="groq", model=self.model)
+
+    def generate(self, prompt: str, system: str = "") -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system or "You are a helpful HR policy assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=1024,
+        )
+        content = response.choices[0].message.content
+        return content or ""
 
 def get_llm_provider() -> LLMProvider:
     """Factory function — returns the right provider based on config.
@@ -80,6 +107,7 @@ def get_llm_provider() -> LLMProvider:
     providers = {
         "gemini": GeminiProvider,
         "claude": ClaudeProvider,
+        "groq": GroqProvider,
     }
 
     provider_name = settings.llm_provider.lower()
