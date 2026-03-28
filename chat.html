@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Policy Q&A Bot</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --surface-2: #f1efe8;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text-2: #5f5e5a;
+    --text-3: #888780;
+    --accent: #534ab7;
+    --accent-bg: #eeedfe;
+    --accent-text: #3c3489;
+    --success-bg: #eaf3de;
+    --success-text: #3b6d11;
+    --danger-bg: #fcebeb;
+    --danger-text: #a32d2d;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --surface: #2c2c2a;
+      --surface-2: #232321;
+      --border: rgba(255,255,255,0.1);
+      --border-md: rgba(255,255,255,0.18);
+      --text: #f1efe8;
+      --text-2: #b4b2a9;
+      --text-3: #888780;
+      --accent: #7f77dd;
+      --accent-bg: #26215c;
+      --accent-text: #cec bf6;
+      --success-bg: #173404;
+      --success-text: #c0dd97;
+      --danger-bg: #501313;
+      --danger-text: #f7c1c1;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 1.5rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; }
+
+  .logo {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .header-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text-3); }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #97c459;
+    display: inline-block;
+    margin-right: 5px;
+  }
+  .status-dot.red { background: #e24b4a; }
+
+  #status-label { font-size: 12px; color: var(--text-2); }
+
+  .config-btn {
+    background: none;
+    border: 0.5px solid var(--border-md);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .config-btn:hover { background: var(--surface-2); }
+
+  .config-panel {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: none;
+  }
+  .config-panel.open { display: block; }
+  .config-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .config-panel label { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .config-panel input {
+    flex: 1;
+    min-width: 200px;
+    padding: 6px 10px;
+    border: 0.5px solid var(--border-md);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 13px;
+  }
+  .config-panel input:focus { outline: none; border-color: var(--accent); }
+  .save-btn {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .save-btn:hover { opacity: 0.9; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 0;
+    gap: 1rem;
+  }
+
+  .messages { display: flex; flex-direction: column; gap: 1.25rem; flex: 1; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 3rem 1rem;
+    text-align: center;
+  }
+  .empty-icon {
+    width: 48px; height: 48px;
+    background: var(--accent-bg);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .empty-state h2 { font-size: 18px; font-weight: 500; }
+  .empty-state p { font-size: 14px; color: var(--text-2); max-width: 360px; line-height: 1.6; }
+
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 0.5rem; }
+  .suggestion {
+    padding: 7px 13px;
+    border: 0.5px solid var(--border-md);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+    background: var(--surface);
+    transition: background 0.15s;
+  }
+  .suggestion:hover { background: var(--surface-2); color: var(--text); }
+
+  .msg { display: flex; flex-direction: column; gap: 4px; }
+
+  .msg.user { align-items: flex-end; }
+  .msg.bot { align-items: flex-start; }
+
+  .bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: var(--radius-lg);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .msg.user .bubble {
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg.bot .bubble {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg.bot .bubble.error {
+    background: var(--danger-bg);
+    border-color: transparent;
+    color: var(--danger-text);
+  }
+
+  .meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 0 4px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-size: 11px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sources { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px; margin-top: 2px; }
+
+  .source-chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Menlo', monospace;
+  }
+
+  .confidence-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+    margin-top: 2px;
+  }
+  .confidence-label { font-size: 11px; color: var(--text-3); }
+  .bar-track {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .confidence-pct { font-size: 11px; color: var(--text-2); font-weight: 500; }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .input-area {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding: 1rem 0 1.5rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    background: var(--surface);
+    border: 0.5px solid var(--border-md);
+    border-radius: var(--radius-lg);
+    padding: 8px 8px 8px 14px;
+    align-items: flex-end;
+  }
+  .input-row:focus-within { border-color: var(--accent); }
+
+  #question {
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    font-family: inherit;
+  }
+  #question::placeholder { color: var(--text-3); }
+
+  .send-btn {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-btn svg { width: 16px; height: 16px; fill: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo">HR</div>
+    <div>
+      <div class="header-title">HR Policy Q&A</div>
+      <div class="header-sub">Powered by RAG + Groq</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="status-label"><span class="status-dot" id="dot"></span>Checking...</span>
+    <button class="config-btn" onclick="toggleConfig()">⚙ API URL</button>
+  </div>
+</header>
+
+<div class="config-panel" id="config-panel">
+  <div class="config-row">
+    <label>API base URL</label>
+    <input type="text" id="api-url-input" placeholder="http://127.0.0.1:8000" />
+    <button class="save-btn" onclick="saveConfig()">Save & check</button>
+  </div>
+</div>
+
+<main>
+  <div class="messages" id="messages">
+    <div class="empty-state" id="empty">
+      <div class="empty-icon">📋</div>
+      <h2>Ask about HR policy</h2>
+      <p>Ask any question and get a grounded answer with source citations from your policy documents.</p>
+      <div class="suggestions">
+        <span class="suggestion" onclick="ask(this.textContent)">How many vacation days do I get?</span>
+        <span class="suggestion" onclick="ask(this.textContent)">What is the parental leave policy?</span>
+        <span class="suggestion" onclick="ask(this.textContent)">Can I work a second job?</span>
+        <span class="suggestion" onclick="ask(this.textContent)">What happens during severance?</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea id="question" rows="1" placeholder="Ask a policy question..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="submitQuestion()" disabled>
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+  </div>
+</main>
+
+<script>
+  let API_BASE = localStorage.getItem('hr_api_url') || 'http://127.0.0.1:8000';
+  let checking = false;
+
+  document.getElementById('api-url-input').value = API_BASE;
+
+  function toggleConfig() {
+    document.getElementById('config-panel').classList.toggle('open');
+  }
+
+  function saveConfig() {
+    API_BASE = document.getElementById('api-url-input').value.replace(/\/$/, '');
+    localStorage.setItem('hr_api_url', API_BASE);
+    document.getElementById('config-panel').classList.remove('open');
+    checkHealth();
+  }
+
+  async function checkHealth() {
+    const dot = document.getElementById('dot');
+    const label = document.getElementById('status-label');
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/health`, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        const data = await res.json();
+        dot.className = 'status-dot';
+        label.innerHTML = `<span class="status-dot"></span>${data.provider} · ${data.environment}`;
+        document.getElementById('send-btn').disabled = false;
+      } else {
+        throw new Error('non-200');
+      }
+    } catch {
+      dot.className = 'status-dot red';
+      label.innerHTML = `<span class="status-dot red"></span>API offline`;
+      document.getElementById('send-btn').disabled = true;
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitQuestion();
+    }
+  }
+
+  function ask(text) {
+    document.getElementById('question').value = text;
+    submitQuestion();
+  }
+
+  function hideEmpty() {
+    const e = document.getElementById('empty');
+    if (e) e.remove();
+  }
+
+  function appendUserMsg(text) {
+    hideEmpty();
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.className = 'msg user';
+    el.innerHTML = `<div class="bubble">${escHtml(text)}</div>`;
+    container.appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    return el;
+  }
+
+  function appendTyping() {
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.className = 'msg bot';
+    el.id = 'typing-indicator';
+    el.innerHTML = `<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    container.appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+  }
+
+  function appendBotMsg(data, elapsed) {
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.className = 'msg bot';
+
+    const confidence = Math.min(100, Math.round((data.chunks_used / 5) * 100));
+    const confColor = confidence >= 70 ? '#639922' : confidence >= 40 ? '#ba7517' : '#a32d2d';
+
+    const sourcesHtml = (data.sources || []).map(s =>
+      `<span class="source-chip">${escHtml(s)}</span>`
+    ).join('');
+
+    el.innerHTML = `
+      <div class="bubble">${escHtml(data.answer)}</div>
+      <div class="meta">
+        <span class="meta-item">⏱ ${elapsed.toFixed(1)}s</span>
+        <span class="meta-item">📄 ${data.chunks_used} chunk${data.chunks_used !== 1 ? 's' : ''} used</span>
+      </div>
+      ${sourcesHtml ? `<div class="sources">${sourcesHtml}</div>` : ''}
+      <div class="confidence-bar">
+        <span class="confidence-label">Confidence</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${confidence}%;background:${confColor}"></div></div>
+        <span class="confidence-pct">${confidence}%</span>
+      </div>
+    `;
+    container.appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+
+  function appendError(msg) {
+    const container = document.getElementById('messages');
+    const el = document.createElement('div');
+    el.className = 'msg bot';
+    el.innerHTML = `<div class="bubble error">${escHtml(msg)}</div>`;
+    container.appendChild(el);
+    el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function submitQuestion() {
+    const input = document.getElementById('question');
+    const question = input.value.trim();
+    if (!question) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    appendUserMsg(question);
+    appendTyping();
+
+    const t0 = performance.now();
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, k: 5 })
+      });
+
+      const elapsed = (performance.now() - t0) / 1000;
+      removeTyping();
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        appendError(err.detail || `Server error ${res.status}`);
+      } else {
+        const data = await res.json();
+        appendBotMsg(data, elapsed);
+      }
+    } catch (err) {
+      removeTyping();
+      appendError('Could not reach the API. Is the server running? Check the API URL in settings.');
+    }
+
+    document.getElementById('send-btn').disabled = false;
+    input.focus();
+  }
+
+  checkHealth();
+  setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>
